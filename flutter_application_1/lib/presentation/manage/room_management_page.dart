@@ -1,5 +1,4 @@
-/// TOI THOI GIAN TU HUY PHONG
-
+// /// TOI THOI GIAN TU HUY PHONG
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/configs/theme/app_colors.dart';
@@ -13,6 +12,7 @@ import 'package:flutter_application_1/presentation/root/pages/settings_page.dart
 import 'package:flutter_application_1/service_locator.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
+import 'room_map_page.dart'; // Import file mới
 
 class RoomManagementPage extends StatefulWidget {
   const RoomManagementPage({super.key});
@@ -56,13 +56,11 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
       },
       (bookings) async {
         for (var booking in bookings) {
-          // Kiểm tra và tự động terminate các booking hết giờ
           if (await _isBookingExpired(booking)) {
             await _terminateBooking(booking, auto: true);
           }
         }
 
-        // Lọc lại danh sách sau khi terminate
         final updatedResult = await sl<GetBookingsUseCase>().call(null);
         updatedResult.fold(
           (error) {
@@ -73,7 +71,7 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
           },
           (updatedBookings) {
             setState(() {
-              _bookings = updatedBookings; // Không lọc trạng thái available nữa
+              _bookings = updatedBookings;
               _isLoading = false;
             });
           },
@@ -82,7 +80,6 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
     );
   }
 
-  // Kiểm tra xem booking có hết giờ hay không
   Future<bool> _isBookingExpired(BookingRequest booking) async {
     final startDateTime = DateTime(
       booking.bookingDate.year,
@@ -287,13 +284,11 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
       return;
     }
 
-    // Cập nhật trạng thái thành 'cancelled' thay vì 'available'
     await FirebaseFirestore.instance.collection('bookings').doc(docId).update({
       'status': 'cancelled',
       'checkInCode': FieldValue.delete(),
     });
 
-    // Cập nhật trạng thái phòng thành 'available'
     final roomSnapshot = await FirebaseFirestore.instance.collection('rooms').doc(roomDocId).get();
 
     if (roomSnapshot.exists) {
@@ -308,6 +303,10 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
         'Đặt phòng ${booking.roomNumber} tại ${booking.buildingCode} đã tự động kết thúc do hết thời gian.',
       );
     } else {
+      await _createNotification(
+        booking.userId,
+        'Đặt phòng ${booking.roomNumber} tại ${booking.buildingCode} đã được kết thúc bởi quản lý.',
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Kết thúc đặt phòng thành công!'),
@@ -333,7 +332,6 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
       return;
     }
 
-    // Xóa hoàn toàn booking khỏi Firestore
     await FirebaseFirestore.instance.collection('bookings').doc(docId).delete();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -357,9 +355,9 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
       case 'completed':
         return Colors.purple;
       case 'cancelled':
-        return Colors.grey; // Màu xám cho trạng thái đã hủy
+        return Colors.grey;
       case 'available':
-        return Colors.red; // Màu đỏ cho trạng thái thoát phòng
+        return Colors.red;
       default:
         return Colors.grey;
     }
@@ -465,6 +463,15 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
         ),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.map, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RoomMapPage()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
             onPressed: () {
@@ -849,7 +856,7 @@ class RoomCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: TextButton.icon(
                       onPressed: onTerminate,
-                      icon: const Icon(Icons.exit_to_app, color: Colors.grey), // Đổi màu thành xám
+                      icon: const Icon(Icons.exit_to_app, color: Colors.grey),
                       label: const Text('Terminate', style: TextStyle(color: Colors.grey)),
                     ),
                   ),

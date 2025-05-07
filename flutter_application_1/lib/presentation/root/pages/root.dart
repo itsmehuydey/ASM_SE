@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter_application_1/core/configs/assets/app_images.dart';
 import 'package:flutter_application_1/core/configs/theme/app_colors.dart';
 import 'package:flutter_application_1/data/models/booking/booking_request.dart';
@@ -186,6 +187,15 @@ class _RootPageState extends State<RootPage> {
           icon: const Icon(Icons.menu, color: Colors.white),
           onPressed: _showMenu,
         ),
+        title: const Text(
+          'ASM',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
@@ -203,76 +213,121 @@ class _RootPageState extends State<RootPage> {
           const SizedBox(width: 10),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            Center(
-              child: Image.asset(
-                AppImages.iconic_logo,
-                height: 60,
-                width: 60,
+      body: Stack(
+        children: [
+          // Static background layer
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/homepage_new.jpg',
+              fit: BoxFit.cover,
+            ),
+          ),
+          // Cover for the black laptop icon
+          Positioned(
+            top: 290, // Approximate position - may need adjustment
+            left: 0,
+            right: 0,
+            height: 100, // Approximate height - may need adjustment
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFB3D9FF), // Light blue color similar to sky
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFFB3D9FF).withOpacity(0.8),
+                    const Color(0xFFB3D9FF).withOpacity(0.85),
+                    const Color(0xFFB3D9FF).withOpacity(0.9),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 30),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildFeatureCard(
-                    title: 'Đặt Phòng',
-                    icon: Icons.add_circle,
-                    image: 'assets/images/booking.png',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const BookingPage()),
-                      );
-                    },
+          ),
+          // Scrollable content layer
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
+                // University title removed as requested
+                const SizedBox(height: 150),
+                const SizedBox(height: 60),
+                // White card container with rounded corners
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
-                  _buildFeatureCard(
-                    title: 'Lịch sử đặt',
-                    icon: Icons.history,
-                    image: 'assets/images/booking_history.png',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const BookingHistoryPage()),
-                      );
-                    },
+                  child: Column(
+                    children: [
+                      GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 20,
+                        mainAxisSpacing: 20,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildFeatureCard(
+                            title: 'Đặt Phòng',
+                            icon: Icons.add_circle,
+                            image: 'assets/images/booking.png',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const BookingPage()),
+                              );
+                            },
+                          ),
+                          _buildFeatureCard(
+                            title: 'Lịch sử đặt',
+                            icon: Icons.history,
+                            image: 'assets/images/booking_history.png',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const BookingHistoryPage()),
+                              );
+                            },
+                          ),
+                          _buildFeatureCard(
+                            title: 'Nhận phòng',
+                            icon: Icons.check_box,
+                            image: 'assets/images/check_in.png',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const CheckInPage()),
+                              );
+                            },
+                          ),
+                          _buildFeatureCard(
+                            title: 'Quản Lí Phòng',
+                            icon: Icons.settings,
+                            image: 'assets/images/room_management.png',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const RoomAuthPage()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  _buildFeatureCard(
-                    title: 'Nhận phòng',
-                    icon: Icons.check_box,
-                    image: 'assets/images/check_in.png',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const CheckInPage()),
-                      );
-                    },
-                  ),
-                  _buildFeatureCard(
-                    title: 'Quản Lí Phòng',
-                    icon: Icons.settings,
-                    image: 'assets/images/room_management.png',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const RoomAuthPage()),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -311,46 +366,32 @@ class _RootPageState extends State<RootPage> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: Colors.amber,
           borderRadius: BorderRadius.circular(15),
-        ),
-        child: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.asset(
-                image,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                decoration: const BoxDecoration(
-                  color: Colors.amber,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(15),
-                    bottomRight: Radius.circular(15),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Icon(icon, size: 18),
-                  ],
-                ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 30,
+              color: Colors.black87,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.black87,
               ),
             ),
           ],

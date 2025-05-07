@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/configs/theme/app_theme.dart';
 import 'package:flutter_application_1/firebase_options.dart';
 import 'package:flutter_application_1/presentation/splash/pages/splash.dart';
-import 'package:device_preview/device_preview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_core/firebase_core.dart';
 //import 'firebase_options.dart';
@@ -12,11 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Đảm bảo các widget được khởi tạo
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform); // Khởi tạo Firebase
   await initializeDependencies(); // Khởi tạo các phụ thuộc
-  runApp(DevicePreview(
-    enabled: true,
-    tools: [...DevicePreview.defaultTools],
-    builder: (context) => MyApp(),
-  ));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -26,7 +21,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo', theme: AppTheme.lightTheme, debugShowCheckedModeBanner: false, home: const SplashPage());
+        title: 'Flutter Demo', 
+        theme: AppTheme.lightTheme, 
+        debugShowCheckedModeBanner: false, 
+        home: const SplashPage());
   }
 } 
 

@@ -6,6 +6,7 @@ import 'package:flutter_application_1/data/models/auth/signin_user_req.dart';
 abstract class AuthFirebaseService {
   Future<Either> signup(CreateUserReq createUserReq);
   Future<Either> signin(SigninUserReq signinUserReq);
+  Future<Either> forgotPassword(String email);
 }
 
 class AuthFirebaseServiceImpl extends AuthFirebaseService {
@@ -47,6 +48,24 @@ class AuthFirebaseServiceImpl extends AuthFirebaseService {
         message = 'Email không hợp lệ';
       }
       return Left(message); // Return error message
+    }
+  }
+  
+  @override
+  Future<Either> forgotPassword(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      return Right('Email đặt lại mật khẩu đã được gửi');
+    } on FirebaseAuthException catch (e) {
+      String message = '';
+      if (e.code == 'invalid-email') {
+        message = 'Email không hợp lệ';
+      } else if (e.code == 'user-not-found') {
+        message = 'Không tìm thấy người dùng với email này';
+      } else {
+        message = 'Đã xảy ra lỗi: ${e.message}';
+      }
+      return Left(message);
     }
   }
 }

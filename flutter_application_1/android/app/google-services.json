@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "802213364546",
-    "project_id": "btl-test-ea331",
-    "storage_bucket": "btl-test-ea331.firebasestorage.app"
+    "project_number": "850527707211",
+    "project_id": "final-app-cb5ab",
+    "storage_bucket": "final-app-cb5ab.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:802213364546:android:a575a9d4387ce3f0d53edb",
+        "mobilesdk_app_id": "1:850527707211:android:cedcabac1edad3e9c1edce",
         "android_client_info": {
           "package_name": "com.example.flutter_application_1"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDPjpuCW4pr2SwoBFJ7gH9g8wpxk58cAsQ"
+          "current_key": "AIzaSyDlePM2648emYwsBkClFN0bMUkFkZsrcZ4"
         }
       ],
       "services": {

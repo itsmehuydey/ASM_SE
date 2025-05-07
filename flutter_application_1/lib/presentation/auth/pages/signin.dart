@@ -5,6 +5,7 @@ import 'package:flutter_application_1/core/configs/assets/app_images.dart';
 import 'package:flutter_application_1/core/configs/theme/app_colors.dart';
 import 'package:flutter_application_1/data/models/auth/signin_user_req.dart';
 import 'package:flutter_application_1/domain/usecases/auth/sigin.dart';
+import 'package:flutter_application_1/presentation/auth/pages/forgot_password.dart';
 import 'package:flutter_application_1/presentation/auth/pages/signup.dart';
 import 'package:flutter_application_1/presentation/choose_mode/pages/choose_mode.dart';
 import 'package:flutter_application_1/presentation/root/pages/root.dart';
@@ -56,7 +57,28 @@ class SigninPage extends StatelessWidget {
             ),
             _PassFeild(context),
             const SizedBox(
-              height: 30,
+              height: 10,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                  );
+                },
+                child: const Text(
+                  'Quên mật khẩu?',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 20,
             ),
             BasicAppButton(
               backgroundColor: AppColors.primary,
@@ -123,6 +145,7 @@ class SigninPage extends StatelessWidget {
   Widget _PassFeild(BuildContext context) {
     return TextField(
       controller: _password,
+      obscureText: true,
       decoration: const InputDecoration(
         hintText: 'Password',
       ).applyDefaults(

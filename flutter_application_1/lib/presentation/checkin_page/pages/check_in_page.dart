@@ -8,6 +8,7 @@ import 'package:flutter_application_1/presentation/root/pages/notifications_page
 import 'package:flutter_application_1/presentation/root/pages/account_page.dart';
 import 'package:flutter_application_1/presentation/root/pages/settings_page.dart';
 import 'package:flutter_application_1/presentation/checkin_page/pages/enter_code_page.dart';
+import 'package:flutter_application_1/presentation/booking/pages/booking_pages.dart';
 import 'package:intl/intl.dart';
 
 class CheckInPage extends StatefulWidget {
@@ -198,7 +199,7 @@ class _CheckInPageState extends State<CheckInPage> {
                         onPressed: () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => const RootPage()),
+                            MaterialPageRoute(builder: (context) => const BookingPage()),
                           );
                         },
                         child: const Text('Đặt phòng ngay'),

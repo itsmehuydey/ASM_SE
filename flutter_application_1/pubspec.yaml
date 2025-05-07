@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  qr_flutter: ^4.1.0
   device_preview: ^1.0.0
   flutter:
     sdk: flutter

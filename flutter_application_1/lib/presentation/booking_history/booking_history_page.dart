@@ -19,13 +19,13 @@ class BookingHistoryPage extends StatefulWidget {
 class _BookingHistoryPageState extends State<BookingHistoryPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   Stream<List<BookingRequest>>? _bookingsStream;
-  
+
   @override
   void initState() {
     super.initState();
     _initBookingsStream();
   }
-  
+
   void _initBookingsStream() {
     final currentUser = _auth.currentUser;
     if (currentUser != null) {
@@ -54,7 +54,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
           : _buildBookingsList(),
     );
   }
-  
+
   Widget _buildNotLoggedIn() {
     return Center(
       child: Column(
@@ -91,7 +91,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       ),
     );
   }
-  
+
   Widget _buildBookingsList() {
     return StreamBuilder<List<BookingRequest>>(
       stream: _bookingsStream,
@@ -99,7 +99,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         }
-        
+
         if (snapshot.hasError) {
           return Center(
             child: Column(
@@ -121,9 +121,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             ),
           );
         }
-        
+
         final bookings = snapshot.data ?? [];
-        
+
         if (bookings.isEmpty) {
           return Center(
             child: Column(
@@ -154,13 +154,13 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             ),
           );
         }
-        
+
         return ListView.builder(
           padding: EdgeInsets.all(16),
           itemCount: bookings.length,
           itemBuilder: (context, index) {
             final booking = bookings[index];
-            
+
             return Card(
               elevation: 3,
               margin: EdgeInsets.only(bottom: 16),
@@ -225,29 +225,41 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                     _buildInfoRow('Thời lượng:', '${booking.duration} giờ'),
                     _buildInfoRow('Số người:', '${booking.numberOfPeople}'),
                     SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        if (_canCancel(booking.status ?? 'pending')) ...[
-                          OutlinedButton(
-                            onPressed: () => _showCancelDialog(booking),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              side: BorderSide(color: Colors.red),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (_canCancel(booking.status ?? 'pending')) ...[
+                            OutlinedButton(
+                              onPressed: () => _showCancelDialog(booking),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.grey,
+                                side: BorderSide(color: Colors.grey),
+                              ),
+                              child: Text('Hủy đặt phòng'),
                             ),
-                            child: Text('Hủy đặt phòng'),
-                          ),
+                            SizedBox(width: 12),
+                          ],
+                          // OutlinedButton(
+                          //   onPressed: () => _showDeleteDialog(booking),
+                          //   style: OutlinedButton.styleFrom(
+                          //     foregroundColor: Colors.black54,
+                          //     side: BorderSide(color: Colors.black54),
+                          //   ),
+                          //   child: Text('Xóa'),
+                          // ),
                           SizedBox(width: 12),
-                        ],
-                        ElevatedButton(
-                          onPressed: () => _showBookingDetailsDialog(booking),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
+                          ElevatedButton(
+                            onPressed: () => _showBookingDetailsDialog(booking),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: Text('Xem chi tiết'),
                           ),
-                          child: Text('Xem chi tiết'),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -258,7 +270,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       },
     );
   }
-  
+
   Widget _buildInfoRow(String label, String value, [Color? valueColor]) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -324,7 +336,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       ),
     );
   }
-  
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'pending':
@@ -336,14 +348,14 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       case 'completed':
         return Colors.purple;
       case 'cancelled':
-        return Colors.red;
+        return Colors.grey; // Màu xám cho trạng thái hủy
       case 'available':
-        return Colors.grey;
+        return Colors.red; // Màu đỏ cho trạng thái thoát phòng
       default:
         return Colors.grey;
     }
   }
-  
+
   String _getStatusText(String status) {
     switch (status) {
       case 'pending':
@@ -355,18 +367,18 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       case 'completed':
         return 'Hoàn thành';
       case 'cancelled':
-        return 'Đã thoát phòng';
-      case 'available':
         return 'Đã hủy';
+      case 'available':
+        return 'Đã thoát phòng';
       default:
         return 'Không xác định';
     }
   }
-  
+
   bool _canCancel(String status) {
     return status == 'pending' || status == 'confirmed';
   }
-  
+
   Future<void> _showCancelDialog(BookingRequest booking) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -381,14 +393,14 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.grey,
             ),
             child: Text('Xác nhận hủy'),
           ),
         ],
       ),
     );
-    
+
     if (confirmed == true) {
       final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
       final roomDocId = '${booking.buildingCode}_${booking.roomNumber.replaceAll('.', '_')}';
@@ -407,10 +419,10 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
         return;
       }
 
-      // Cập nhật trạng thái thành 'available' thay vì 'cancelled'
+      // Cập nhật trạng thái thành 'cancelled' thay vì 'available'
       await FirebaseFirestore.instance.collection('bookings').doc(docId).update({
-        'status': 'available',
-        'checkInCode': FieldValue.delete(), // Xóa mã nhận phòng nếu có
+        'status': 'cancelled',
+        'checkInCode': FieldValue.delete(),
       });
 
       // Cập nhật trạng thái phòng thành 'available'
@@ -433,4 +445,55 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       );
     }
   }
+
+  // Future<void> _showDeleteDialog(BookingRequest booking) async {
+  //   final confirmed = await showDialog<bool>(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text('Xác nhận xóa lịch sử đặt phòng'),
+  //       content: Text('Bạn có chắc chắn muốn xóa lịch sử đặt phòng ${booking.roomNumber} vào ngày ${DateFormat('dd/MM/yyyy').format(booking.bookingDate)}? Hành động này không thể hoàn tác.'),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context, false),
+  //           child: Text('Không'),
+  //         ),
+  //         ElevatedButton(
+  //           onPressed: () => Navigator.pop(context, true),
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: Colors.red,
+  //           ),
+  //           child: Text('Xác nhận xóa'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+
+  //   if (confirmed == true) {
+  //     final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
+  //     final docSnapshot = await FirebaseFirestore.instance
+  //         .collection('bookings')
+  //         .doc(docId)
+  //         .get();
+
+  //     if (!docSnapshot.exists) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //           content: Text('Đặt phòng không tồn tại. Vui lòng thử lại.'),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //       return;
+  //     }
+
+  //     // Xóa hoàn toàn booking khỏi Firestore
+  //     await FirebaseFirestore.instance.collection('bookings').doc(docId).delete();
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Đã xóa lịch sử đặt phòng thành công'),
+  //         backgroundColor: Colors.green,
+  //       ),
+  //     );
+  //   }
+  // }
 }

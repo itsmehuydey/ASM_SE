@@ -1,6 +1,5 @@
 /// TOI THOI GIAN TU HUY PHONG
 
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/configs/theme/app_colors.dart';
@@ -56,18 +55,14 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
         });
       },
       (bookings) async {
-        // Kiểm tra và xóa các booking có trạng thái 'available'
         for (var booking in bookings) {
-          if (booking.status == 'available') {
-            await _deleteBooking(booking);
-          }
           // Kiểm tra và tự động terminate các booking hết giờ
-          else if (await _isBookingExpired(booking)) {
+          if (await _isBookingExpired(booking)) {
             await _terminateBooking(booking, auto: true);
           }
         }
 
-        // Lọc lại danh sách sau khi xóa và terminate
+        // Lọc lại danh sách sau khi terminate
         final updatedResult = await sl<GetBookingsUseCase>().call(null);
         updatedResult.fold(
           (error) {
@@ -78,26 +73,13 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
           },
           (updatedBookings) {
             setState(() {
-              _bookings = updatedBookings.where((booking) => booking.status != 'available').toList();
+              _bookings = updatedBookings; // Không lọc trạng thái available nữa
               _isLoading = false;
             });
           },
         );
       },
     );
-  }
-
-  // Xóa booking khỏi Firestore
-  Future<void> _deleteBooking(BookingRequest booking) async {
-    final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('bookings')
-        .doc(docId)
-        .get();
-
-    if (docSnapshot.exists) {
-      await FirebaseFirestore.instance.collection('bookings').doc(docId).delete();
-    }
   }
 
   // Kiểm tra xem booking có hết giờ hay không
@@ -109,7 +91,6 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
       booking.startTime.hour,
       booking.startTime.minute,
     );
-
     final endDateTime = startDateTime.add(Duration(hours: booking.duration));
     final now = DateTime.now();
 
@@ -156,8 +137,7 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
                   (booking.bookingDate.day == _selectedDate!.day &&
                       booking.bookingDate.month == _selectedDate!.month &&
                       booking.bookingDate.year == _selectedDate!.year);
-              bool isNotAvailable = booking.status != 'available';
-              return matchesBuilding && matchesDate && isNotAvailable;
+              return matchesBuilding && matchesDate;
             }).toList();
             _isLoading = false;
           });
@@ -184,7 +164,8 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
   }
 
   Future<void> _confirmBooking(BookingRequest booking) async {
-    final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
+    final docId =
+        '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
     final docSnapshot = await FirebaseFirestore.instance
         .collection('bookings')
         .doc(docId)
@@ -245,7 +226,8 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
   }
 
   Future<void> _extendBooking(BookingRequest booking) async {
-    final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
+    final docId =
+        '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
     final docSnapshot = await FirebaseFirestore.instance
         .collection('bookings')
         .doc(docId)
@@ -298,9 +280,12 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
     );
   }
 
-  Future<void> _terminateBooking(BookingRequest booking, {bool auto = false}) async {
-    final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
-    final roomDocId = '${booking.buildingCode}_${booking.roomNumber.replaceAll('.', '_')}';
+  Future<void> _terminateBooking(BookingRequest booking,
+      {bool auto = false}) async {
+    final docId =
+        '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
+    final roomDocId =
+        '${booking.buildingCode}_${booking.roomNumber.replaceAll('.', '_')}';
 
     final docSnapshot = await FirebaseFirestore.instance
         .collection('bookings')
@@ -319,8 +304,11 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
       return;
     }
 
-    // Xóa booking trực tiếp thay vì sử dụng DeleteBookingUseCase
-    await FirebaseFirestore.instance.collection('bookings').doc(docId).delete();
+    // Cập nhật trạng thái thành 'cancelled' thay vì 'available'
+    await FirebaseFirestore.instance.collection('bookings').doc(docId).update({
+      'status': 'cancelled',
+      'checkInCode': FieldValue.delete(),
+    });
 
     // Cập nhật trạng thái phòng thành 'available'
     final roomSnapshot = await FirebaseFirestore.instance
@@ -329,20 +317,59 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
         .get();
 
     if (roomSnapshot.exists) {
-      await FirebaseFirestore.instance.collection('rooms').doc(roomDocId).update({
+      await FirebaseFirestore.instance
+          .collection('rooms')
+          .doc(roomDocId)
+          .update({
         'status': 'available',
       });
     }
 
-    if (!auto) {
+    if (auto) {
+      await _createNotification(
+        booking.userId,
+        'Đặt phòng ${booking.roomNumber} tại ${booking.buildingCode} đã tự động kết thúc do hết thời gian.',
+      );
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Kết thúc đặt phòng thành công!'),
           backgroundColor: Colors.green,
         ),
       );
-      await Future.delayed(const Duration(seconds: 2));
     }
+    await Future.delayed(const Duration(seconds: 2));
+    await _fetchBookings();
+  }
+
+  Future<void> _deleteBooking(BookingRequest booking) async {
+    final docId =
+        '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
+    final docSnapshot = await FirebaseFirestore.instance
+        .collection('bookings')
+        .doc(docId)
+        .get();
+
+    if (!docSnapshot.exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đặt phòng không tồn tại. Vui lòng thử lại.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Xóa hoàn toàn booking khỏi Firestore
+    await FirebaseFirestore.instance.collection('bookings').doc(docId).delete();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đã xóa đặt phòng thành công'),
+        backgroundColor: Colors.green,
+      ),
+    );
+    await Future.delayed(const Duration(seconds: 2));
     await _fetchBookings();
   }
 
@@ -357,7 +384,9 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
       case 'completed':
         return Colors.purple;
       case 'cancelled':
-        return Colors.red;
+        return Colors.grey; // Màu xám cho trạng thái đã hủy
+      case 'available':
+        return Colors.red; // Màu đỏ cho trạng thái thoát phòng
       default:
         return Colors.grey;
     }
@@ -375,6 +404,8 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
         return 'Hoàn thành';
       case 'cancelled':
         return 'Đã hủy';
+      case 'available':
+        return 'Đã thoát phòng';
       default:
         return 'Đã thoát phòng';
     }
@@ -424,14 +455,19 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
               _buildInfoRow('Tòa:', booking.buildingCode),
               _buildInfoRow('Phòng:', booking.roomNumber),
               _buildInfoRow('Tầng:', '${booking.floor}'),
-              _buildInfoRow('Trạng thái:', _getStatusText(booking.status ?? 'pending'), _getStatusColor(booking.status ?? 'pending')),
-              _buildInfoRow('Ngày đặt:', DateFormat('dd/MM/yyyy').format(booking.bookingDate)),
+              _buildInfoRow(
+                  'Trạng thái:',
+                  _getStatusText(booking.status ?? 'pending'),
+                  _getStatusColor(booking.status ?? 'pending')),
+              _buildInfoRow('Ngày đặt:',
+                  DateFormat('dd/MM/yyyy').format(booking.bookingDate)),
               _buildInfoRow('Thời gian:', booking.startTime.format(context)),
               _buildInfoRow('Thời lượng:', '${booking.duration} giờ'),
               _buildInfoRow('Số người:', '${booking.numberOfPeople}'),
               _buildInfoRow('Người đặt:', userDisplay),
               if (booking.status != 'pending')
-                _buildInfoRow('Mã nhận phòng:', booking.checkInCode ?? 'Chưa có mã'),
+                _buildInfoRow(
+                    'Mã nhận phòng:', booking.checkInCode ?? 'Chưa có mã'),
             ],
           ),
         ),
@@ -466,13 +502,15 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NotificationsPage()),
+                MaterialPageRoute(
+                    builder: (context) => const NotificationsPage()),
               );
             },
           ),
           const CircleAvatar(
             radius: 16,
-            backgroundImage: AssetImage('assets/images/profile_placeholder.png'),
+            backgroundImage:
+                AssetImage('assets/images/profile_placeholder.png'),
           ),
           const SizedBox(width: 10),
         ],
@@ -555,30 +593,43 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
                             onConfirm: () => _confirmBooking(booking),
                             onExtend: () => _extendBooking(booking),
                             onTerminate: () => _terminateBooking(booking),
+                            onDelete: () => _showDeleteDialog(booking),
                             onViewDetails: () => _viewDetails(booking),
                           );
                         },
                       ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 20.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            StatusIndicator(
-                              color: Colors.green,
-                              text: 'Đã nhận phòng',
-                            ),
-                            SizedBox(width: 10),
-                            StatusIndicator(
-                              color: Colors.orange,
-                              text: 'Chưa xác nhận',
-                            ),
-                            SizedBox(width: 10),
-                            StatusIndicator(
-                              color: Colors.blue,
-                              text: 'Đã xác nhận',
-                            ),
-                          ],
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: const [
+                              StatusIndicator(
+                                color: Colors.green,
+                                text: 'Đã nhận phòng',
+                              ),
+                              SizedBox(width: 10),
+                              StatusIndicator(
+                                color: Colors.orange,
+                                text: 'Chưa xác nhận',
+                              ),
+                              SizedBox(width: 10),
+                              StatusIndicator(
+                                color: Colors.blue,
+                                text: 'Đã xác nhận',
+                              ),
+                              SizedBox(width: 10),
+                              StatusIndicator(
+                                color: Colors.grey,
+                                text: 'Đã hủy',
+                              ),
+                              SizedBox(width: 10),
+                              StatusIndicator(
+                                color: Colors.red,
+                                text: 'Đã thoát phòng',
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -699,6 +750,34 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
       ),
     );
   }
+
+  Future<void> _showDeleteDialog(BookingRequest booking) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Xác nhận trạng thái đặt phòng'),
+        content: Text(
+            'Bạn có chắc chắn muốn xóa trạng thái đặt phòng ${booking.roomNumber} vào ngày ${DateFormat('dd/MM/yyyy').format(booking.bookingDate)}? Hành động này không thể hoàn tác.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Không'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: Text('Xác nhận xóa'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _deleteBooking(booking);
+    }
+  }
 }
 
 class RoomCard extends StatelessWidget {
@@ -706,6 +785,7 @@ class RoomCard extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback onExtend;
   final VoidCallback onTerminate;
+  final VoidCallback onDelete;
   final VoidCallback onViewDetails;
 
   const RoomCard({
@@ -713,6 +793,7 @@ class RoomCard extends StatelessWidget {
     required this.onConfirm,
     required this.onExtend,
     required this.onTerminate,
+    required this.onDelete,
     required this.onViewDetails,
     super.key,
   });
@@ -721,11 +802,17 @@ class RoomCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isConfirmed = booking.status == 'confirmed';
     final isCheckedIn = booking.status == 'checked_in';
+    final isCancelled = booking.status == 'cancelled';
+    final isAvailable = booking.status == 'available';
     final statusColor = isCheckedIn
         ? Colors.green
         : isConfirmed
             ? Colors.blue
-            : Colors.orange;
+            : isCancelled
+                ? Colors.grey
+                : isAvailable
+                    ? Colors.red
+                    : Colors.orange;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -777,7 +864,10 @@ class RoomCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (!isConfirmed && !isCheckedIn)
+                if (!isConfirmed &&
+                    !isCheckedIn &&
+                    !isCancelled &&
+                    !isAvailable)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: TextButton.icon(
@@ -787,22 +877,34 @@ class RoomCard extends StatelessWidget {
                           style: TextStyle(color: Colors.green)),
                     ),
                   ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: TextButton.icon(
-                    onPressed: onExtend,
-                    icon: const Icon(Icons.timer, color: Colors.blue),
-                    label: const Text('Extend',
-                        style: TextStyle(color: Colors.blue)),
+                if (!isCancelled && !isAvailable)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: TextButton.icon(
+                      onPressed: onExtend,
+                      icon: const Icon(Icons.timer, color: Colors.blue),
+                      label: const Text('Extend',
+                          style: TextStyle(color: Colors.blue)),
+                    ),
                   ),
-                ),
+                if (!isCancelled && !isAvailable)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: TextButton.icon(
+                      onPressed: onTerminate,
+                      icon: const Icon(Icons.exit_to_app,
+                          color: Colors.grey), // Đổi màu thành xám
+                      label: const Text('Terminate',
+                          style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: TextButton.icon(
-                    onPressed: onTerminate,
-                    icon: const Icon(Icons.exit_to_app, color: Colors.red),
-                    label: const Text('Terminate',
-                        style: TextStyle(color: Colors.red)),
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete, color: Colors.black54),
+                    label: const Text('Delete',
+                        style: TextStyle(color: Colors.black54)),
                   ),
                 ),
                 Padding(

@@ -48,7 +48,7 @@ class GetStartedPage extends StatelessWidget {
                       )),
                   SizedBox(height: 20),
                   Text(
-                    'Chào mừng bạn đến với hệ thống hỗ trợ đặt chỗ và quản lý không gian học tập thông minh tại HCMUT! Ứng dụng giúp sinh viên dễ dàng tìm kiếm, đặt chỗ và sử dụng không gian học tập hiện đại',
+                    'Welcome to the intelligent study space booking and management system at HCMUT! This application helps students easily search for, reserve, and use modern study spaces!',
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
                       color: Colors.white,

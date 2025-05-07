@@ -251,78 +251,100 @@ class _RootPageState extends State<RootPage> {
                 // University title removed as requested
                 const SizedBox(height: 150),
                 const SizedBox(height: 60),
-                // White card container with rounded corners
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      GridView.count(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          _buildFeatureCard(
-                            title: 'Đặt Phòng',
-                            icon: Icons.add_circle,
-                            image: 'assets/images/booking.png',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const BookingPage()),
-                              );
-                            },
-                          ),
-                          _buildFeatureCard(
-                            title: 'Lịch sử đặt',
-                            icon: Icons.history,
-                            image: 'assets/images/booking_history.png',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const BookingHistoryPage()),
-                              );
-                            },
-                          ),
-                          _buildFeatureCard(
-                            title: 'Nhận phòng',
-                            icon: Icons.check_box,
-                            image: 'assets/images/check_in.png',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const CheckInPage()),
-                              );
-                            },
-                          ),
-                          _buildFeatureCard(
-                            title: 'Quản Lí Phòng',
-                            icon: Icons.settings,
-                            image: 'assets/images/room_management.png',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const RoomAuthPage()),
-                              );
-                            },
+                
+                // Container trắng chính với logo đè lên
+                Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    // White card container with rounded corners
+                    Container(
+                      margin: const EdgeInsets.only(top: 40, left: 20, right: 20), // Dời lên 40px để logo đè lên
+                      padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 20), // Padding phía trên lớn hơn để chừa chỗ cho logo
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            spreadRadius: 1,
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                      child: Column(
+                        children: [
+                          GridView.count(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 20,
+                            mainAxisSpacing: 20,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: [
+                              _buildFeatureCard(
+                                title: 'Đặt Phòng',
+                                icon: Icons.add_circle,
+                                image: 'assets/images/booking.png',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const BookingPage()),
+                                  );
+                                },
+                              ),
+                              _buildFeatureCard(
+                                title: 'Lịch sử đặt',
+                                icon: Icons.history,
+                                image: 'assets/images/booking_history.png',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const BookingHistoryPage()),
+                                  );
+                                },
+                              ),
+                              _buildFeatureCard(
+                                title: 'Nhận phòng',
+                                icon: Icons.check_box,
+                                image: 'assets/images/check_in.png',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const CheckInPage()),
+                                  );
+                                },
+                              ),
+                              _buildFeatureCard(
+                                title: 'Quản Lí Phòng',
+                                icon: Icons.settings,
+                                image: 'assets/images/room_management.png',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const RoomAuthPage()),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Logo BK đè lên container trắng
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(10),
+                      child: Image.asset(
+                        'assets/images/profile_placeholder.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/configs/theme/app_colors.dart';
 import 'package:flutter_application_1/core/configs/assets/app_images.dart';
@@ -26,7 +25,7 @@ class _BookingPageState extends State<BookingPage> {
   bool _showResults = false;
   bool _isLoading = true;
   String _errorMessage = '';
-  
+
   List<Building> _buildings = [];
 
   @override
@@ -41,7 +40,7 @@ class _BookingPageState extends State<BookingPage> {
     });
 
     final result = await sl<GetBuildingsUseCase>().call(null);
-    
+
     result.fold(
       (error) {
         setState(() {
@@ -80,6 +79,9 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   Future<void> _selectTime(BuildContext context) async {
+    final now = DateTime.now();
+    final minimumTime = DateTime.now().add(const Duration(minutes: 15));
+
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime ?? TimeOfDay.now(),
@@ -90,9 +92,35 @@ class _BookingPageState extends State<BookingPage> {
         );
       },
     );
+
     if (picked != null && picked != _selectedTime) {
-      final roundedHour = picked.hour;
-      final roundedTime = TimeOfDay(hour: roundedHour, minute: 0);
+      // Kiểm tra nếu phút không phải là bội số của 15
+      final int minutes = ((picked.minute + 2) ~/ 5) * 5;
+      final roundedTime = TimeOfDay(
+        hour: picked.hour + (minutes >= 60 ? 1 : 0),
+        minute: minutes >= 60 ? minutes - 60 : minutes,
+      );
+
+      // Tạo DateTime từ ngày đã chọn (hoặc ngày hiện tại nếu chưa chọn) và thời gian đã chọn
+      final selectedDateTime = DateTime(
+        _selectedDate?.year ?? now.year,
+        _selectedDate?.month ?? now.month,
+        _selectedDate?.day ?? now.day,
+        roundedTime.hour,
+        roundedTime.minute,
+      );
+
+      // Kiểm tra nếu thời gian đã chọn < thời gian tối thiểu
+      if (selectedDateTime.isBefore(minimumTime)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng chọn thời gian sau thời điểm hiện tại ít nhất 15 phút'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() {
         _selectedTime = roundedTime;
       });
@@ -106,14 +134,14 @@ class _BookingPageState extends State<BookingPage> {
       );
       return;
     }
-    
+
     if (_selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Vui lòng chọn thời gian')),
       );
       return;
     }
-    
+
     if (_peopleController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Vui lòng nhập số người')),
@@ -135,12 +163,12 @@ class _BookingPageState extends State<BookingPage> {
       );
       return;
     }
-    
+
     setState(() {
       _showResults = true;
     });
   }
-  
+
   void _onBuildingTap(String buildingCode) {
     Navigator.push(
       context,
@@ -215,9 +243,8 @@ class _BookingPageState extends State<BookingPage> {
                                   child: _buildSearchField(
                                     icon: Icons.calendar_today,
                                     hint: 'Ngày đến',
-                                    value: _selectedDate != null
-                                        ? DateFormat('dd/MM/yyyy').format(_selectedDate!)
-                                        : null,
+                                    value:
+                                        _selectedDate != null ? DateFormat('dd/MM/yyyy').format(_selectedDate!) : null,
                                     onTap: () => _selectDate(context),
                                   ),
                                 ),
@@ -226,9 +253,7 @@ class _BookingPageState extends State<BookingPage> {
                                   child: _buildSearchField(
                                     icon: Icons.access_time,
                                     hint: 'Thời gian',
-                                    value: _selectedTime != null
-                                        ? _selectedTime!.format(context)
-                                        : null,
+                                    value: _selectedTime != null ? _selectedTime!.format(context) : null,
                                     onTap: () => _selectTime(context),
                                   ),
                                 ),
@@ -356,7 +381,7 @@ class _BookingPageState extends State<BookingPage> {
                                 itemCount: _buildings.length,
                                 itemBuilder: (context, index) {
                                   final building = _buildings[index];
-                                  
+
                                   return GestureDetector(
                                     onTap: () => _onBuildingTap(building.buildingCode),
                                     child: Container(
@@ -468,4 +493,3 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 }
-

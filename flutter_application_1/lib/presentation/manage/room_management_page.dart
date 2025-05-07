@@ -94,8 +94,7 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
     final endDateTime = startDateTime.add(Duration(hours: booking.duration));
     final now = DateTime.now();
 
-    return now.isAfter(endDateTime) &&
-        (booking.status == 'confirmed' || booking.status == 'checked_in');
+    return now.isAfter(endDateTime) && (booking.status == 'confirmed' || booking.status == 'checked_in');
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -130,9 +129,7 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
           setState(() {
             _bookings = bookings.where((booking) {
               bool matchesBuilding = _buildingController.text.isEmpty ||
-                  booking.buildingCode
-                      .toLowerCase()
-                      .contains(_buildingController.text.toLowerCase());
+                  booking.buildingCode.toLowerCase().contains(_buildingController.text.toLowerCase());
               bool matchesDate = _selectedDate == null ||
                   (booking.bookingDate.day == _selectedDate!.day &&
                       booking.bookingDate.month == _selectedDate!.month &&
@@ -164,12 +161,8 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
   }
 
   Future<void> _confirmBooking(BookingRequest booking) async {
-    final docId =
-        '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('bookings')
-        .doc(docId)
-        .get();
+    final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
+    final docSnapshot = await FirebaseFirestore.instance.collection('bookings').doc(docId).get();
 
     if (!docSnapshot.exists) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -226,12 +219,8 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
   }
 
   Future<void> _extendBooking(BookingRequest booking) async {
-    final docId =
-        '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('bookings')
-        .doc(docId)
-        .get();
+    final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
+    final docSnapshot = await FirebaseFirestore.instance.collection('bookings').doc(docId).get();
 
     if (!docSnapshot.exists) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -280,17 +269,11 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
     );
   }
 
-  Future<void> _terminateBooking(BookingRequest booking,
-      {bool auto = false}) async {
-    final docId =
-        '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
-    final roomDocId =
-        '${booking.buildingCode}_${booking.roomNumber.replaceAll('.', '_')}';
+  Future<void> _terminateBooking(BookingRequest booking, {bool auto = false}) async {
+    final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
+    final roomDocId = '${booking.buildingCode}_${booking.roomNumber.replaceAll('.', '_')}';
 
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('bookings')
-        .doc(docId)
-        .get();
+    final docSnapshot = await FirebaseFirestore.instance.collection('bookings').doc(docId).get();
 
     if (!docSnapshot.exists) {
       if (!auto) {
@@ -311,16 +294,10 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
     });
 
     // Cập nhật trạng thái phòng thành 'available'
-    final roomSnapshot = await FirebaseFirestore.instance
-        .collection('rooms')
-        .doc(roomDocId)
-        .get();
+    final roomSnapshot = await FirebaseFirestore.instance.collection('rooms').doc(roomDocId).get();
 
     if (roomSnapshot.exists) {
-      await FirebaseFirestore.instance
-          .collection('rooms')
-          .doc(roomDocId)
-          .update({
+      await FirebaseFirestore.instance.collection('rooms').doc(roomDocId).update({
         'status': 'available',
       });
     }
@@ -343,12 +320,8 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
   }
 
   Future<void> _deleteBooking(BookingRequest booking) async {
-    final docId =
-        '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('bookings')
-        .doc(docId)
-        .get();
+    final docId = '${booking.userId}_${booking.roomNumber}_${booking.bookingDate.toIso8601String()}';
+    final docSnapshot = await FirebaseFirestore.instance.collection('bookings').doc(docId).get();
 
     if (!docSnapshot.exists) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -455,19 +428,14 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
               _buildInfoRow('Tòa:', booking.buildingCode),
               _buildInfoRow('Phòng:', booking.roomNumber),
               _buildInfoRow('Tầng:', '${booking.floor}'),
-              _buildInfoRow(
-                  'Trạng thái:',
-                  _getStatusText(booking.status ?? 'pending'),
+              _buildInfoRow('Trạng thái:', _getStatusText(booking.status ?? 'pending'),
                   _getStatusColor(booking.status ?? 'pending')),
-              _buildInfoRow('Ngày đặt:',
-                  DateFormat('dd/MM/yyyy').format(booking.bookingDate)),
+              _buildInfoRow('Ngày đặt:', DateFormat('dd/MM/yyyy').format(booking.bookingDate)),
               _buildInfoRow('Thời gian:', booking.startTime.format(context)),
               _buildInfoRow('Thời lượng:', '${booking.duration} giờ'),
               _buildInfoRow('Số người:', '${booking.numberOfPeople}'),
               _buildInfoRow('Người đặt:', userDisplay),
-              if (booking.status != 'pending')
-                _buildInfoRow(
-                    'Mã nhận phòng:', booking.checkInCode ?? 'Chưa có mã'),
+              if (booking.status != 'pending') _buildInfoRow('Mã nhận phòng:', booking.checkInCode ?? 'Chưa có mã'),
             ],
           ),
         ),
@@ -502,15 +470,13 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => const NotificationsPage()),
+                MaterialPageRoute(builder: (context) => const NotificationsPage()),
               );
             },
           ),
           const CircleAvatar(
             radius: 16,
-            backgroundImage:
-                AssetImage('assets/images/profile_placeholder.png'),
+            backgroundImage: AssetImage('assets/images/profile_placeholder.png'),
           ),
           const SizedBox(width: 10),
         ],
@@ -546,10 +512,8 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
                                   child: _buildSearchField(
                                     icon: Icons.calendar_today,
                                     hint: 'Ngày đến',
-                                    value: _selectedDate != null
-                                        ? DateFormat('dd/MM/yyyy')
-                                            .format(_selectedDate!)
-                                        : null,
+                                    value:
+                                        _selectedDate != null ? DateFormat('dd/MM/yyyy').format(_selectedDate!) : null,
                                     onTap: () => _selectDate(context),
                                   ),
                                 ),
@@ -651,8 +615,7 @@ class _RoomManagementPageState extends State<RoomManagementPage> {
             case 1:
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => const NotificationsPage()),
+                MaterialPageRoute(builder: (context) => const NotificationsPage()),
               );
               break;
             case 2:
@@ -847,8 +810,7 @@ class RoomCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                        'Ngày: ${DateFormat('dd/MM/yyyy').format(booking.bookingDate)}'),
+                    Text('Ngày: ${DateFormat('dd/MM/yyyy').format(booking.bookingDate)}'),
                     Text('Bắt đầu: ${booking.startTime.format(context)}'),
                     Text('Thời lượng: ${booking.duration} giờ'),
                     Text('Số người: ${booking.numberOfPeople}'),
@@ -864,17 +826,13 @@ class RoomCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (!isConfirmed &&
-                    !isCheckedIn &&
-                    !isCancelled &&
-                    !isAvailable)
+                if (!isConfirmed && !isCheckedIn && !isCancelled && !isAvailable)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: TextButton.icon(
                       onPressed: onConfirm,
                       icon: const Icon(Icons.check, color: Colors.green),
-                      label: const Text('Confirm',
-                          style: TextStyle(color: Colors.green)),
+                      label: const Text('Confirm', style: TextStyle(color: Colors.green)),
                     ),
                   ),
                 if (!isCancelled && !isAvailable)
@@ -883,8 +841,7 @@ class RoomCard extends StatelessWidget {
                     child: TextButton.icon(
                       onPressed: onExtend,
                       icon: const Icon(Icons.timer, color: Colors.blue),
-                      label: const Text('Extend',
-                          style: TextStyle(color: Colors.blue)),
+                      label: const Text('Extend', style: TextStyle(color: Colors.blue)),
                     ),
                   ),
                 if (!isCancelled && !isAvailable)
@@ -892,10 +849,8 @@ class RoomCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: TextButton.icon(
                       onPressed: onTerminate,
-                      icon: const Icon(Icons.exit_to_app,
-                          color: Colors.grey), // Đổi màu thành xám
-                      label: const Text('Terminate',
-                          style: TextStyle(color: Colors.grey)),
+                      icon: const Icon(Icons.exit_to_app, color: Colors.grey), // Đổi màu thành xám
+                      label: const Text('Terminate', style: TextStyle(color: Colors.grey)),
                     ),
                   ),
                 Padding(
@@ -903,8 +858,7 @@ class RoomCard extends StatelessWidget {
                   child: TextButton.icon(
                     onPressed: onDelete,
                     icon: const Icon(Icons.delete, color: Colors.black54),
-                    label: const Text('Delete',
-                        style: TextStyle(color: Colors.black54)),
+                    label: const Text('Delete', style: TextStyle(color: Colors.black54)),
                   ),
                 ),
                 Padding(
@@ -912,8 +866,7 @@ class RoomCard extends StatelessWidget {
                   child: TextButton.icon(
                     onPressed: onViewDetails,
                     icon: const Icon(Icons.info, color: Colors.black),
-                    label: const Text('Details',
-                        style: TextStyle(color: Colors.black)),
+                    label: const Text('Details', style: TextStyle(color: Colors.black)),
                   ),
                 ),
               ],

@@ -213,7 +213,8 @@ import 'package:flutter_application_1/service_locator.dart';
 
 abstract class BookingFirebaseService {
   Future<Either<String, String>> createBooking(BookingRequest bookingRequest);
-  Future<Either<String, bool>> checkRoomAvailability(String buildingCode, String roomNumber, DateTime date, TimeOfDay startTime, int duration, int numberOfPeople);
+  Future<Either<String, bool>> checkRoomAvailability(
+      String buildingCode, String roomNumber, DateTime date, TimeOfDay startTime, int duration, int numberOfPeople);
   Stream<List<BookingRequest>> streamUserBookings(String userId);
   Stream<List<BookingRequest>> streamRoomBookings(String buildingCode, String roomNumber);
   Future<List<BookingRequest>> getBookings();
@@ -264,7 +265,8 @@ class BookingFirebaseServiceImpl implements BookingFirebaseService {
         createdAt: DateTime.now(),
       );
 
-      final docId = '${updatedRequest.userId}_${updatedRequest.roomNumber}_${updatedRequest.bookingDate.toIso8601String()}';
+      final docId =
+          '${updatedRequest.userId}_${updatedRequest.roomNumber}_${updatedRequest.bookingDate.toIso8601String()}';
       await _firestore.collection('bookings').doc(docId).set(updatedRequest.toJson());
 
       final roomService = sl<RoomFirebaseService>();
@@ -288,8 +290,8 @@ class BookingFirebaseServiceImpl implements BookingFirebaseService {
   }
 
   @override
-  Future<Either<String, bool>> checkRoomAvailability(
-      String buildingCode, String roomNumber, DateTime date, TimeOfDay startTime, int duration, int numberOfPeople) async {
+  Future<Either<String, bool>> checkRoomAvailability(String buildingCode, String roomNumber, DateTime date,
+      TimeOfDay startTime, int duration, int numberOfPeople) async {
     try {
       final roomDocId = '${buildingCode}_${roomNumber.replaceAll('.', '_')}';
       final roomDoc = await _firestore.collection('rooms').doc(roomDocId).get();
@@ -350,11 +352,11 @@ class BookingFirebaseServiceImpl implements BookingFirebaseService {
 
   @override
   Stream<List<BookingRequest>> streamUserBookings(String userId) {
-    return _firestore.collection('bookings')
+    return _firestore
+        .collection('bookings')
         .where('userId', isEqualTo: userId)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => BookingRequest.fromJson(doc.data())).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => BookingRequest.fromJson(doc.data())).toList());
   }
 
   @override
@@ -362,7 +364,8 @@ class BookingFirebaseServiceImpl implements BookingFirebaseService {
     final today = DateTime.now();
     final dateString = today.toIso8601String().split('T')[0];
 
-    return _firestore.collection('bookings')
+    return _firestore
+        .collection('bookings')
         .where('buildingCode', isEqualTo: buildingCode)
         .where('roomNumber', isEqualTo: roomNumber)
         .where('bookingDate', isGreaterThanOrEqualTo: dateString)
@@ -370,16 +373,13 @@ class BookingFirebaseServiceImpl implements BookingFirebaseService {
         .orderBy('startTime.hour')
         .orderBy('startTime.minute')
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => BookingRequest.fromJson(doc.data())).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => BookingRequest.fromJson(doc.data())).toList());
   }
 
   @override
   Future<List<BookingRequest>> getBookings() async {
     final snapshot = await _firestore.collection('bookings').get();
-    return snapshot.docs
-        .map((doc) => BookingRequest.fromJson(doc.data()))
-        .toList();
+    return snapshot.docs.map((doc) => BookingRequest.fromJson(doc.data())).toList();
   }
 
   @override

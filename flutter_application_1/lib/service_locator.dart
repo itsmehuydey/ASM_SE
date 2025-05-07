@@ -8,6 +8,7 @@ import 'package:flutter_application_1/domain/repository/building/building.dart';
 import 'package:flutter_application_1/domain/repository/room/room.dart';
 import 'package:flutter_application_1/domain/usecases/auth/sigin.dart';
 import 'package:flutter_application_1/domain/usecases/auth/signup.dart';
+import 'package:flutter_application_1/domain/usecases/auth/forgot_password.dart';
 import 'package:flutter_application_1/domain/usecases/building/get_building_by_code.dart';
 import 'package:flutter_application_1/domain/usecases/building/get_buildings.dart';
 import 'package:flutter_application_1/domain/usecases/room/get_available_rooms.dart';
@@ -50,6 +51,7 @@ Future<void> initializeDependencies() async {
   // Register use cases
   sl.registerSingleton<SignupUseCase>(SignupUseCase());
   sl.registerSingleton<SigninUseCase>(SigninUseCase());
+  sl.registerSingleton<ForgotPasswordUseCase>(ForgotPasswordUseCase());
   sl.registerSingleton<CreateBookingUseCase>(CreateBookingUseCase());
   sl.registerSingleton<GetBuildingsUseCase>(GetBuildingsUseCase());
   sl.registerSingleton<GetAvailableRoomsUseCase>(GetAvailableRoomsUseCase());
